@@ -1,19 +1,22 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
-import { ConfigModule } from '@nestjs/config'; // 1. Import ConfigModule
+import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
+import { EventsModule } from './events/events.module'; // 1. Import
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ // 2. Add ConfigModule here
-      isGlobal: true,      // Makes config available everywhere
+    ConfigModule.forRoot({
+      isGlobal: true,
     }),
     PrismaModule,
     AuthModule,
     UsersModule,
+    EventsModule,   //2. Add to imports
   ],
   controllers: [],
   providers: [],
 })
 export class AppModule {}
+
