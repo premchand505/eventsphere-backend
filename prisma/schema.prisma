@@ -1,25 +1,43 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+// 1. Defines the Prisma Client generator
 generator client {
   provider = "prisma-client-js"
 }
 
+// 2. Defines the database connection (THIS BLOCK WAS MISSING)
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// Our database models will go here later
-// ... (generator and datasource blocks remain the same) ...
-
+// 3. Defines your data models
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   password  String
-  firstName String? // The '?' makes this field optional
-  lastName  String? // The '?' makes this field optional
+  firstName String?
+  lastName  String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  events    Event[]
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  location    String
+  date        DateTime
+  price       Float    @default(0)
+  capacity    Int
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  hostId      String
+  host        User     @relation(fields: [hostId], references: [id])
 }
