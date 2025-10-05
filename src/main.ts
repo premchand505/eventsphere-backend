@@ -8,14 +8,28 @@ async function bootstrap() {
     rawBody: true,
   });
 
-  
+  const productionUrl = process.env.FRONTEND_URL;
+  const allowedOrigins = [
+    'http://localhost:3001',
+  ];
+  if (productionUrl) {
+    allowedOrigins.push(productionUrl);
+  }
   
 
-  // Add this block to enable CORS
   app.enableCors({
-    origin: process.env.FRONTEND_URL,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl)
+      if (!origin) return callback(null, true);
+      
+      // Allow if the origin is in our explicit list or is a Vercel preview URL
+      if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
   });
-  
   // 2. Enable the ValidationPipe globally
   app.useGlobalPipes(
     new ValidationPipe({

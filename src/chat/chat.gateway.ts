@@ -17,7 +17,18 @@ interface AuthenticatedSocket extends Socket {
 
 @WebSocketGateway({
   cors: {
-    origin: process.env.FRONTEND_URL,
+    origin: (origin, callback) => {
+      const productionUrl = process.env.FRONTEND_URL;
+      const allowed = [
+        'http://localhost:3001',
+        productionUrl,
+      ];
+      if (!origin || allowed.includes(origin) || origin.endsWith('.vercel.app')) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: ['GET', 'POST'],
   },
 })
