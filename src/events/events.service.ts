@@ -25,6 +25,18 @@ export class EventsService {
       where: {
         id: eventId,
       },
+ include: {
+        host: {
+          // Select only the fields we want to expose
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+
     });
   }
 
@@ -73,4 +85,7 @@ export class EventsService {
       },
     });
   }
+
+
+  
 }
