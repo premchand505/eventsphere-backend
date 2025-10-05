@@ -13,7 +13,7 @@ async function bootstrap() {
 
   // Add this block to enable CORS
   app.enableCors({
-    origin: 'http://localhost:3001', // Allow requests from our frontend
+    origin: process.env.FRONTEND_URL,
   });
   
   // 2. Enable the ValidationPipe globally
