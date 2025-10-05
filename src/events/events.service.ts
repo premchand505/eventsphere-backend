@@ -20,24 +20,32 @@ export class EventsService {
     return this.prisma.event.findMany();
   }
 
-  getEventById(eventId: string) {
-    return this.prisma.event.findUniqueOrThrow({
-      where: {
-        id: eventId,
-      },
- include: {
+  async getEventById(eventId: string, userId?: string) {
+    const event = await this.prisma.event.findUniqueOrThrow({
+      where: { id: eventId },
+      include: {
         host: {
-          // Select only the fields we want to expose
-          select: {
-            id: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-          },
+          select: { id: true, email: true, firstName: true, lastName: true },
         },
       },
-
     });
+
+    let isRegistered = false;
+    if (userId) {
+      // If a user is logged in, check if they have a registration record
+      const registration = await this.prisma.registration.findFirst({
+        where: {
+          eventId: eventId,
+          userId: userId,
+        },
+      });
+      if (registration) {
+        isRegistered = true;
+      }
+    }
+
+    // Return the event data along with the registration status
+    return { ...event, isRegistered };
   }
 
   async updateEvent(

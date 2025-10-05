@@ -6,6 +6,8 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { EventsService } from './events.service';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { RegistrationsService } from 'src/registrations/registrations.service'; // Import the new service
+import { OptionalJwtGuard } from 'src/auth/guard/optional-jwt.guard';
+import { User } from '@prisma/client';
 
 @Controller('events')
 export class EventsController {
@@ -25,9 +27,14 @@ export class EventsController {
     return this.eventsService.getAllEvents();
   }
 
+ @UseGuards(OptionalJwtGuard) // Use our new optional guard
   @Get(':id')
-  getEventById(@Param('id') eventId: string) {
-    return this.eventsService.getEventById(eventId);
+  getEventById(
+    @Param('id') eventId: string,
+    @GetUser() user: User | null, // The user can now be null
+  ) {
+    // Pass the userId (or null) to the service
+    return this.eventsService.getEventById(eventId, user?.id);
   }
 
   @UseGuards(JwtGuard)
