@@ -11,10 +11,10 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     private prisma: PrismaService,
   ) {
     super({
-      // Add '!' to assure TypeScript these values will not be undefined
       clientID: config.get('GOOGLE_CLIENT_ID')!,
       clientSecret: config.get('GOOGLE_CLIENT_SECRET')!,
-      callbackURL: 'http://localhost:3000/auth/google/callback',
+      // Use the BACKEND_URL environment variable for the callback
+      callbackURL: `${config.get('BACKEND_URL')}/auth/google/callback`,
       scope: ['email', 'profile'],
     });
   }
