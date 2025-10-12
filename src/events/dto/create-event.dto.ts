@@ -4,6 +4,8 @@ import {
   IsNotEmpty,
   IsNumber,
   IsString,
+  IsOptional,
+  IsUrl,
   Min,
 } from 'class-validator';
 
@@ -33,4 +35,14 @@ export class CreateEventDto {
   @Min(1)
   @Type(() => Number) // Transform the incoming value to a number
   capacity: number;
+
+   // --- ADDITIONS START ---
+  @IsString()
+  @IsOptional()
+  featuring?: string;
+
+  @IsUrl()
+  @IsOptional()
+  imageUrl?: string;
+  // --- ADDITIONS END ---
 }
