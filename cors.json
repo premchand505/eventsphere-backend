@@ -1,0 +1,14 @@
+[
+  {
+    "origin": [
+      "http://localhost:3001",
+      "https://eventsphere-frontend.vercel.app",
+      "https://eventsphere-frontend-git-develop-prems-projects-9331e4fc.vercel.app"
+    ],
+    "method": ["GET", "HEAD", "PUT", "POST", "DELETE"],
+    "responseHeader": ["Content-Type", "Access-Control-Allow-Origin"],
+    "maxAgeSeconds": 3600
+  }
+]
+
+

@@ -7,6 +7,7 @@ import { EventsModule } from './events/events.module';
 import { RegistrationsModule } from './registrations/registrations.module';
 import { PaymentsModule } from './payments/payments.module';
 import { ChatModule } from './chat/chat.module'; // 1. Import the new ChatModule
+import { StorageModule } from './storage/storage.module';
 
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import { ChatModule } from './chat/chat.module'; // 1. Import the new ChatModule
     EventsModule,
     RegistrationsModule,
     PaymentsModule,
-    ChatModule, // 2. Add ChatModule to the imports array
+    ChatModule,
+    StorageModule, // 2. Add ChatModule to the imports array
   ],
   controllers: [],
   // 3. IMPORTANT: Remove ChatGateway from here if it exists
