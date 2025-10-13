@@ -1,11 +1,10 @@
-// Add Patch to the imports here
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { GetUser } from 'src/auth/decorator/get-user.decorator';
 import { JwtGuard } from 'src/auth/guard/jwt.guard';
 import { CreateEventDto } from './dto/create-event.dto';
 import { EventsService } from './events.service';
 import { UpdateEventDto } from './dto/update-event.dto';
-import { RegistrationsService } from 'src/registrations/registrations.service'; // Import the new service
+import { RegistrationsService } from 'src/registrations/registrations.service';
 import { OptionalJwtGuard } from 'src/auth/guard/optional-jwt.guard';
 import { User } from '@prisma/client';
 
@@ -13,7 +12,7 @@ import { User } from '@prisma/client';
 export class EventsController {
   constructor(
     private eventsService: EventsService,
-    private registrationsService: RegistrationsService, // Inject the new service
+    private registrationsService: RegistrationsService,
   ) {}
 
   @UseGuards(JwtGuard)
@@ -22,18 +21,24 @@ export class EventsController {
     return this.eventsService.createEvent(dto, userId);
   }
 
+  // NEW ENDPOINT for fetching hosted events
+  @UseGuards(JwtGuard)
+  @Get('host')
+  getHostedEvents(@GetUser('id') userId: string) {
+    return this.eventsService.getHostedEvents(userId);
+  }
+
   @Get()
   getAllEvents() {
     return this.eventsService.getAllEvents();
   }
 
- @UseGuards(OptionalJwtGuard) // Use our new optional guard
+  @UseGuards(OptionalJwtGuard)
   @Get(':id')
   getEventById(
     @Param('id') eventId: string,
-    @GetUser() user: User | null, // The user can now be null
+    @GetUser() user: User | null,
   ) {
-    // Pass the userId (or null) to the service
     return this.eventsService.getEventById(eventId, user?.id);
   }
 
@@ -48,7 +53,7 @@ export class EventsController {
   }
 
   @UseGuards(JwtGuard)
-  @HttpCode(HttpStatus.NO_CONTENT) // Set status code to 204
+  @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(':id')
   deleteEvent(
     @Param('id') eventId: string,
@@ -57,7 +62,6 @@ export class EventsController {
     return this.eventsService.deleteEvent(userId, eventId);
   }
 
-   // NEW ENDPOINT: Register for an event
   @UseGuards(JwtGuard)
   @Post(':id/register')
   registerForEvent(

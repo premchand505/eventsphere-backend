@@ -20,6 +20,23 @@ export class EventsService {
     return this.prisma.event.findMany();
   }
 
+  // NEW METHOD: Get events hosted by a specific user
+  getHostedEvents(userId: string) {
+    return this.prisma.event.findMany({
+      where: {
+        hostId: userId,
+      },
+      include: {
+        _count: {
+          select: { registrations: true },
+        },
+      },
+      orderBy: {
+        date: 'desc',
+      },
+    });
+  }
+
   async getEventById(eventId: string, userId?: string) {
     const event = await this.prisma.event.findUniqueOrThrow({
       where: { id: eventId },
@@ -32,7 +49,6 @@ export class EventsService {
 
     let isRegistered = false;
     if (userId) {
-      // If a user is logged in, check if they have a registration record
       const registration = await this.prisma.registration.findFirst({
         where: {
           eventId: eventId,
@@ -43,8 +59,6 @@ export class EventsService {
         isRegistered = true;
       }
     }
-
-    // Return the event data along with the registration status
     return { ...event, isRegistered };
   }
 
@@ -72,28 +86,28 @@ export class EventsService {
       },
     });
   }
-   async deleteEvent(userId: string, eventId: string) {
-    // 1. Find the event
+  async deleteEvent(userId: string, eventId: string) {
     const event = await this.prisma.event.findUnique({
       where: {
         id: eventId,
       },
     });
 
-    // 2. Check if the event exists and if the user is the host
-    // This is the same authorization check we used in updateEvent
     if (!event || event.hostId !== userId) {
       throw new ForbiddenException('Access to resources denied');
     }
+    
+    // Also delete associated registrations before deleting the event
+    await this.prisma.registration.deleteMany({
+      where: {
+        eventId: eventId,
+      },
+    });
 
-    // 3. Delete the event
     await this.prisma.event.delete({
       where: {
         id: eventId,
       },
     });
   }
-
-
-  
 }

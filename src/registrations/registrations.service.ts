@@ -5,8 +5,30 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class RegistrationsService {
   constructor(private prisma: PrismaService) {}
 
+  // NEW METHOD to get all registrations for a user
+  getRegistrationsByUser(userId: string) {
+    return this.prisma.registration.findMany({
+      where: {
+        userId: userId,
+      },
+      include: {
+        event: { // Include the full event details for each registration
+          select: {
+            id: true,
+            title: true,
+            location: true,
+            date: true,
+            featuring: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
+
   async createRegistration(eventId: string, userId: string) {
-    // We use a transaction to ensure both checks and the creation happen atomically
     return this.prisma.$transaction(async (tx) => {
       const event = await tx.event.findUnique({
         where: { id: eventId },
@@ -15,12 +37,10 @@ export class RegistrationsService {
         throw new NotFoundException('Event not found');
       }
 
-      // Business Logic Rule 1: A user cannot register for their own event.
       if (event.hostId === userId) {
         throw new ForbiddenException('You cannot register for your own event.');
       }
 
-      // Business Logic Rule 2: A user cannot register for the same event twice.
       const existingRegistration = await tx.registration.findFirst({
         where: { eventId, userId },
       });
@@ -28,7 +48,6 @@ export class RegistrationsService {
         throw new ConflictException('You are already registered for this event.');
       }
 
-      // Business Logic Rule 3: Check if the event is full.
       const registrationCount = await tx.registration.count({
         where: { eventId },
       });
@@ -36,7 +55,6 @@ export class RegistrationsService {
         throw new ForbiddenException('This event has reached full capacity.');
       }
 
-      // If all checks pass, create the registration.
       const registration = await tx.registration.create({
         data: {
           eventId,
