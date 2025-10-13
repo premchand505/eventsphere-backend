@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { GetUser } from 'src/auth/decorator/get-user.decorator';
 import { JwtGuard } from 'src/auth/guard/jwt.guard';
 import { CreateEventDto } from './dto/create-event.dto';
@@ -21,16 +21,20 @@ export class EventsController {
     return this.eventsService.createEvent(dto, userId);
   }
 
-  // NEW ENDPOINT for fetching hosted events
   @UseGuards(JwtGuard)
   @Get('host')
   getHostedEvents(@GetUser('id') userId: string) {
     return this.eventsService.getHostedEvents(userId);
   }
 
+  // MODIFIED ENDPOINT to accept query parameters
   @Get()
-  getAllEvents() {
-    return this.eventsService.getAllEvents();
+  getAllEvents(
+    @Query('location') location?: string,
+    @Query('name') name?: string,
+    @Query('genre') genre?: string,
+  ) {
+    return this.eventsService.getAllEvents({ location, name, genre });
   }
 
   @UseGuards(OptionalJwtGuard)

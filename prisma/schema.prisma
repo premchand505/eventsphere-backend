@@ -39,7 +39,7 @@ model Event {
   featuring     String // Add this required field
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
+  genre         String
   hostId      String
   host        User     @relation(fields: [hostId], references: [id])
   registrations Registration[] // Add this line

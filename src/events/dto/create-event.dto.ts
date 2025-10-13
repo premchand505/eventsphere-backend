@@ -22,19 +22,23 @@ export class CreateEventDto {
   
   @IsString()
   @IsNotEmpty()
-  featuring: string; // Add this line
+  featuring: string;
+
+  @IsString()
+  @IsNotEmpty()
+  genre: string; // Add this required field
 
   @IsDateString()
   @IsNotEmpty()
-  date: string; // The date will come in as an ISO 8601 string
+  date: string;
 
   @IsNumber()
   @Min(0)
-  @Type(() => Number) // Transform the incoming value to a number
+  @Type(() => Number)
   price: number;
 
   @IsNumber()
   @Min(1)
-  @Type(() => Number) // Transform the incoming value to a number
+  @Type(() => Number)
   capacity: number;
 }

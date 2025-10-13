@@ -1,4 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -16,11 +17,29 @@ export class EventsService {
     });
   }
 
-  getAllEvents() {
-    return this.prisma.event.findMany();
+  // MODIFIED METHOD for filtering
+  getAllEvents(filters: { location?: string; name?: string; genre?: string }) {
+    const { location, name, genre } = filters;
+    const where: Prisma.EventWhereInput = {};
+
+    if (location) {
+      where.location = { contains: location, mode: 'insensitive' };
+    }
+    if (name) {
+      where.title = { contains: name, mode: 'insensitive' };
+    }
+    if (genre) {
+      where.genre = { equals: genre, mode: 'insensitive' };
+    }
+
+    return this.prisma.event.findMany({
+      where,
+      orderBy: {
+        date: 'desc',
+      },
+    });
   }
 
-  // NEW METHOD: Get events hosted by a specific user
   getHostedEvents(userId: string) {
     return this.prisma.event.findMany({
       where: {
@@ -86,6 +105,7 @@ export class EventsService {
       },
     });
   }
+
   async deleteEvent(userId: string, eventId: string) {
     const event = await this.prisma.event.findUnique({
       where: {
@@ -97,7 +117,6 @@ export class EventsService {
       throw new ForbiddenException('Access to resources denied');
     }
     
-    // Also delete associated registrations before deleting the event
     await this.prisma.registration.deleteMany({
       where: {
         eventId: eventId,
