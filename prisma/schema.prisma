@@ -16,18 +16,17 @@ datasource db {
 // ... (generator and datasource blocks remain the same) ...
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  firstName String?
-  lastName  String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  events       Event[]
-  registrations Registration[] // Add this line
+  id            String         @id @default(cuid())
+  email         String         @unique
+  password      String
+  firstName     String // Changed from String?
+  lastName      String // Changed from String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  events        Event[]
+  registrations Registration[]
 }
+
 
 model Event {
   id          String   @id @default(cuid())
