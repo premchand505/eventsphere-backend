@@ -16,6 +16,7 @@ lerna-debug.log*
 .env*
 !.env.example
 env.yml
+.env.development
 
 # OS-specific files
 .DS_Store

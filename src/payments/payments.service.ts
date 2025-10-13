@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'; // 1. Add ForbiddenException here
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RegistrationsService } from 'src/registrations/registrations.service';
@@ -19,7 +19,6 @@ export class PaymentsService {
   }
 
   async createCheckoutSession(eventId: string, userId: string) {
-    // ... (This method remains unchanged)
     const event = await this.prisma.event.findUnique({
       where: { id: eventId },
     });
@@ -27,6 +26,12 @@ export class PaymentsService {
     if (!event) {
       throw new NotFoundException('Event not found');
     }
+
+    // This logic will now work correctly because NODE_ENV is set
+    const frontendUrl =
+      process.env.NODE_ENV === 'development'
+        ? 'http://localhost:3001'
+        : this.config.get('FRONTEND_URL');
 
     const session = await this.stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -44,8 +49,8 @@ export class PaymentsService {
         },
       ],
       mode: 'payment',
-      success_url: `${process.env.FRONTEND_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL}/events/${eventId}`,
+      success_url: `${frontendUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${frontendUrl}/events/${eventId}`,
       metadata: {
         eventId,
         userId,
@@ -56,7 +61,7 @@ export class PaymentsService {
   }
 
   async handleWebhookEvent(signature: string, body: Buffer) {
-    // ... (This method remains unchanged, but now ForbiddenException is correctly imported)
+    // ... (rest of the file is correct)
     const webhookSecret = this.config.get('STRIPE_WEBHOOK_SECRET')!;
     let event: Stripe.Event;
 
