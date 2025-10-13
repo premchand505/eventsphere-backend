@@ -10,7 +10,6 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
 
-// Attach a custom property to the Socket type
 interface AuthenticatedSocket extends Socket {
   userId?: string;
 }
@@ -42,7 +41,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private prisma: PrismaService,
   ) {}
 
-  // 1. Authenticate the user when they connect
   async handleConnection(client: AuthenticatedSocket) {
     const token = client.handshake.auth.token;
     if (!token) {
@@ -53,7 +51,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: this.config.get('JWT_SECRET'),
       });
-      // Attach userId to the socket object for later use
       client.userId = payload.sub;
       console.log(`✅ Client Connected: ${client.id}, User ID: ${client.userId}`);
     } catch (e) {
@@ -66,35 +63,45 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(`❌ Client Disconnected: ${client.id}, User ID: ${client.userId}`);
   }
 
-  // 2. Handle users joining a room
   @SubscribeMessage('joinRoom')
   async handleJoinRoom(client: AuthenticatedSocket, eventId: string) {
     const userId = client.userId;
-    
-    // Check if user is registered for the event
-    const registration = await this.prisma.registration.findFirst({
-      where: { userId, eventId },
+
+    // 1. Fetch the event to check who the host is
+    const event = await this.prisma.event.findUnique({
+      where: { id: eventId },
     });
 
-    if (registration) {
+    if (!event) {
+        client.emit('error', 'Event not found.');
+        return;
+    }
+
+    // 2. Check if user is the host
+    const isHost = event.hostId === userId;
+
+    // 3. Check if user is registered (if they aren't the host)
+    const registration = !isHost ? await this.prisma.registration.findFirst({
+      where: { userId, eventId },
+    }) : null;
+
+    // 4. Authorize if user is the host OR is registered
+    if (isHost || registration) {
       client.join(eventId);
       console.log(`User ${userId} joined room ${eventId}`);
     } else {
       console.log(`Unauthorized attempt by User ${userId} to join room ${eventId}`);
-      // Optionally, emit an error back to the client
-      client.emit('error', 'You are not registered for this event.');
+      client.emit('error', 'You are not authorized to join this chat.');
     }
   }
 
-  // 3. Handle users leaving a room
   @SubscribeMessage('leaveRoom')
   handleLeaveRoom(client: AuthenticatedSocket, eventId: string): void {
     client.leave(eventId);
     console.log(`User ${client.userId} left room ${eventId}`);
   }
 
-
-   @SubscribeMessage('sendMessage')
+  @SubscribeMessage('sendMessage')
   async handleMessage(
     client: AuthenticatedSocket,
     payload: { eventId: string; message: string },
@@ -102,13 +109,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const userId = client.userId!;
     const { eventId, message } = payload;
 
-    // Optional: Fetch user's name to display in the chat
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { firstName: true, lastName: true, email: true },
+      select: { firstName: true, lastName: true },
     });
     
-    const userName = user?.firstName ?? user?.email;
+    // Use firstName + lastName for the display name
+    const userName = (user?.firstName && user?.lastName) 
+      ? `${user.firstName} ${user.lastName}` 
+      : 'Anonymous';
 
     const messagePayload = {
       userId,
@@ -117,7 +126,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       timestamp: new Date(),
     };
 
-    // Broadcast the new message to everyone in the specific event room
     this.server.to(eventId).emit('newMessage', messagePayload);
   }
 }
