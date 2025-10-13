@@ -3,17 +3,15 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
-import { StorageService } from 'src/storage/storage.service'; // 1. Import StorageService
+import { StorageService } from 'src/storage/storage.service';
 
 @Injectable()
 export class EventsService {
-  // 2. Inject StorageService
   constructor(
     private prisma: PrismaService,
     private storageService: StorageService,
   ) {}
 
-  // 3. Update createEvent to handle the file
   async createEvent(
     dto: CreateEventDto,
     userId: string,
@@ -28,7 +26,7 @@ export class EventsService {
     return this.prisma.event.create({
       data: {
         ...dto,
-        imageUrl, // Save the URL to the database
+        imageUrl,
         hostId: userId,
       },
     });
@@ -44,13 +42,22 @@ export class EventsService {
 
     return this.prisma.event.findMany({
       where,
+      // THE FIX IS HERE 👇
+      // Explicitly select all the fields the frontend needs.
+      select: {
+        id: true,
+        title: true,
+        location: true,
+        date: true,
+        imageUrl: true,
+        featuring: true,
+      },
       orderBy: { date: 'desc' },
-      take: limit, // Add the limit here
+      take: limit,
     });
   }
 
   getHostedEvents(userId: string) {
-    // ...
     return this.prisma.event.findMany({
       where: { hostId: userId },
       include: { _count: { select: { registrations: true } } },
@@ -59,7 +66,6 @@ export class EventsService {
   }
 
   async getEventById(eventId: string, userId?: string) {
-    // ...
     const event = await this.prisma.event.findUniqueOrThrow({
       where: { id: eventId },
       include: { host: { select: { id: true, email: true, firstName: true, lastName: true } } },
@@ -75,14 +81,12 @@ export class EventsService {
   }
 
   async updateEvent(userId: string, eventId: string, dto: UpdateEventDto) {
-    // ...
     const event = await this.prisma.event.findUnique({ where: { id: eventId } });
     if (!event || event.hostId !== userId) throw new ForbiddenException('Access to resources denied');
     return this.prisma.event.update({ where: { id: eventId }, data: { ...dto } });
   }
 
   async deleteEvent(userId: string, eventId: string) {
-    // ...
     const event = await this.prisma.event.findUnique({ where: { id: eventId } });
     if (!event || event.hostId !== userId) throw new ForbiddenException('Access to resources denied');
     await this.prisma.registration.deleteMany({ where: { eventId: eventId } });
