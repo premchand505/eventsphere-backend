@@ -36,7 +36,7 @@ model Event {
   date        DateTime
   price       Float    @default(0)
   capacity    Int
-
+  featuring     String // Add this required field
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

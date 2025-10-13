@@ -18,7 +18,11 @@ export class CreateEventDto {
 
   @IsString()
   @IsNotEmpty()
-  location: string;
+  location: string; 
+  
+  @IsString()
+  @IsNotEmpty()
+  featuring: string; // Add this line
 
   @IsDateString()
   @IsNotEmpty()
