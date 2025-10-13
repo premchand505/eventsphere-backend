@@ -22,3 +22,5 @@ env.yml
 .DS_Store
 Thumbs.db
 /generated/prisma
+
+gcp-service-account.json

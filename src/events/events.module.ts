@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { EventsController } from './events.controller';
-import { AuthModule } from 'src/auth/auth.module';
 import { EventsService } from './events.service';
-import { RegistrationsModule } from 'src/registrations/registrations.module'; // 1. Import
+import { RegistrationsModule } from 'src/registrations/registrations.module';
+import { StorageModule } from 'src/storage/storage.module'; // 1. Import StorageModule
 
 @Module({
-  imports: [AuthModule, RegistrationsModule], // 2. Add RegistrationsModule
+  imports: [RegistrationsModule, StorageModule], // 2. Add StorageModule to imports
   controllers: [EventsController],
-  providers: [EventsService], // 3. EventsService remains here
+  providers: [EventsService],
 })
 export class EventsModule {}
